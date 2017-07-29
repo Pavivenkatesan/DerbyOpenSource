@@ -841,7 +841,7 @@ public class SystemProcedures  {
         throws SQLException
     {
         StringBuffer query = new StringBuffer();
-        query.append("alter table ");
+        query.append("C ");
         query.append(basicSchemaTableValidation(schemaname,tablename));
 
         //Index name can't be empty string
@@ -896,7 +896,7 @@ public class SystemProcedures  {
         if ((tablename==null) || tablename.length()==0)
 			throw PublicAPI.wrapStandardException(
 					StandardException.newException(
-							SQLState.LANG_TABLE_NOT_FOUND, 
+							SQLState.LANG_TABLE_NOT_FOUND,
 							tablename));
         	        
         return IdUtil.mkQualifiedName(schemaname, tablename);
@@ -930,8 +930,18 @@ public class SystemProcedures  {
     short     sequential)
         throws SQLException
     {
+		Connection connection = getDefaultConn();
+		boolean tableExists=false;
+		DatabaseMetaData md = connection.getMetaData();
+		ResultSet rs = md.getTables(null, null, "%", null);
+		while (rs.next()) {
+			if(tablename.equals(rs.getString(3))){
+				tableExists=true;
+			}
+		}
+		if(tableExists){
         StringBuffer query = new StringBuffer();
-        query.append("alter table ");
+        query.append("alter table");
         query.append(basicSchemaTableValidation(schemaname,tablename));
         query.append(" compress" +  (sequential != 0 ? " sequential" : ""));
 
@@ -942,6 +952,9 @@ public class SystemProcedures  {
         ps.close();
 
 		conn.close();
+		}else{
+			System.out.println("table not found");
+		}
     }
 
     /**
